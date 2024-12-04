@@ -1,7 +1,7 @@
 import PikaParser as P
 
 instructions = open("inputs/day03.txt") do file
-    readlines(file)
+    join(readlines(file))
 end
 
 abstract type AbstractResult end
@@ -66,30 +66,24 @@ tovalue(::Int, ::DoResult) = (1, 0)
 tovalue(::Int, ::DontResult) = (0, 0)
 tovalue(state::Int, v::NumericalResult) = (state, state * v.value)
 
-function process_muls(results::Vector{AbstractResult}; state::Int=1)
-    state, sum([tovalue(state, result)[2] for result ∈ results])
+function process_muls(results::Vector{AbstractResult})
+    sum([tovalue(1, result)[2] for result ∈ results])
 end
 
-function process_muls_do_dont(results::Vector{AbstractResult}; state::Int=1)
+function process_muls_do_dont(results::Vector{AbstractResult})
     sum = 0
+    state = 1
     for result ∈ results
         state, v = tovalue(state, result)
         sum += v
     end
-    state, sum
+    sum
 end
 
 function process_instructions(instructions; dodont::Bool=false)
-    op = dodont ? process_muls_do_dont : process_muls
-    state = 1
-    sum = 0
-    for inst ∈ instructions
-        p = P.parse(g, inst)
-        results = evaluate_matches(p)
-        state, v = op(results; state=state)
-        sum += v
-    end
-    sum
+    p = P.parse(g, instructions)
+    results = evaluate_matches(p)
+    (dodont ? process_muls_do_dont : process_muls)(results)
 end
 
 g = make_grammar()
