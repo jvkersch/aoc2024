@@ -49,5 +49,5 @@ function part2()
     println(count_crosses(grid))
 end
 
-println(part1())
-println(part2())
+part1()
+part2()
