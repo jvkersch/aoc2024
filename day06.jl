@@ -20,12 +20,13 @@ isoutside(p::I, grid::Matrix) = !Base.checkbounds(Bool, grid, p)
 readdata() = permutedims(hcat(collect.(readlines("inputs/day06.txt"))...))
 
 findguardian(grid) = Guardian(first(findall(pos -> pos == '^', grid)))
-markgrid!(grid, g::Guardian) = (grid[g.pos] = 'X')
+markvisited!(board, g::Guardian) = (board[g.pos] |= 2 << g.direction)
+hascycle(board, g::Guardian) = board[g.pos] & (2 << g.direction) > 0
 
 function walk(grid)
-    grid = copy(grid)
+    visited = zeros(Int, size(grid))
     g = findguardian(grid)
-    markgrid!(grid, g)
+    markvisited!(visited, g)
     while true
         next = nextposition(g)
         isoutside(next, grid) && break
@@ -34,10 +35,26 @@ function walk(grid)
             turnright!(g)
         else
             g.pos = next
-            markgrid!(grid, g)
+            if hascycle(visited, g)
+                return true, visited
+            end
+            markvisited!(visited, g)
         end
     end
-    return grid
+    return false, visited
 end
 
-part1() = sum(walk(readdata()) .== 'X')
+part1() = sum(walk(readdata())[2] .> 0)
+
+function part2()
+    grid = readdata()
+    n = 0
+    for c ∈ CartesianIndices(grid)
+        newgrid = copy(grid)
+        newgrid[c] != '.' && continue
+        newgrid[c] = '#'
+        cycle, _ = walk(newgrid)
+        cycle && (n += 1)
+    end
+    n
+end
